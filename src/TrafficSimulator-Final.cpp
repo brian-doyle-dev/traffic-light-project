@@ -5,6 +5,7 @@
 #include "Vehicle.h"
 #include "Street.h"
 #include "Intersection.h"
+#include "TrafficLight.h"
 #include "Graphics.h"
 
 
