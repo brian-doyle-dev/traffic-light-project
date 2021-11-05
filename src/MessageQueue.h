@@ -13,7 +13,7 @@ public:
 
     void send(T &&message)
     {
-        std::unique_lock<std::mutex> lock(_mut);
+        std::lock_guard<std::mutex> lock(_mut);
 
         _queue.push_back(std::move(message));
         _cond.notify_one();
