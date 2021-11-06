@@ -7,22 +7,39 @@ using namespace std::chrono_literals;
 
 /* Implementation of class "MessageQueue" */
 
-/* 
 template <typename T>
 T MessageQueue<T>::receive()
 {
     // FP.5a : The method receive should use std::unique_lock<std::mutex> and _condition.wait() 
     // to wait for and receive new messages and pull them from the queue using move semantics. 
     // The received object should then be returned by the receive function. 
+    std::unique_lock<std::mutex> lock(_mut);
+    _cond.wait(lock, [this] { return !_queue.empty(); });
+    T msg = std::move(_queue.front());
+
+    _queue.pop_front();
+    return msg;
 }
+
 
 template <typename T>
 void MessageQueue<T>::send(T &&msg)
 {
     // FP.4a : The method send should use the mechanisms std::lock_guard<std::mutex> 
     // as well as _condition.notify_one() to add a new message to the queue and afterwards send a notification.
+    std::lock_guard<std::mutex> lock(_mut);
+
+    _queue.push_back(std::move(msg));
+
+    // Remove old message from the queue to prevent the queue continually 
+    // growing for intersections that don't get many visits by vehicles.
+    while (_queue.size() > 1)
+    {
+         _queue.pop_front();
+    }
+
+    _cond.notify_one();
 }
-*/
 
 /* Implementation of class "TrafficLight" */
 
@@ -42,7 +59,6 @@ void TrafficLight::waitForGreen()
     {
  
         TrafficLightPhase phase = queue.receive();
-        std::cout << "Receive Message: " << ((phase == green) ? "Green" : "Red") << std::endl;
         if (phase == green)
         {
             return;
@@ -95,7 +111,6 @@ void TrafficLight::cycleThroughPhases()
             _timer = 3000; //rand();
             togglePhase();
             TrafficLightPhase phase = getCurrentPhase();
-            std::cout << "Send Message: " << ((phase == green) ? "Green" : "Red") << std::endl;
             queue.send(std::move(getCurrentPhase()));
         }
 
