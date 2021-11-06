@@ -93,6 +93,7 @@ void TrafficLight::simulate()
 
 int TrafficLight::rand()
 {
+    // Generate random number between 4000 and 6000
     return 4000 + (std::rand() + 1) / ((static_cast<long>(RAND_MAX) + 1)/ 2000);
 }
         
@@ -105,6 +106,8 @@ void TrafficLight::cycleThroughPhases()
     // Also, the while-loop should use std::this_thread::sleep_for to wait 1ms between two cycles. 
     while(true)
     {    
+        // Each count of the timer is 1ms. When it reaches zero the 
+        // phase of the lights is changed and the new phase placed in the queue.
         _timer--;
         if (_timer == 0)
         {
