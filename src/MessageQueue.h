@@ -7,15 +7,22 @@ public:
         _cond.wait(lock, [this] { return !_queue.empty(); });
         T message = std::move(_queue.back());
 
-        _queue.pop_back();
+        _queue.pop_front();
         return message;
     }
 
     void send(T &&message)
     {
-        std::unique_lock<std::mutex> lock(_mut);
+        std::lock_guard<std::mutex> lock(_mut);
 
         _queue.push_back(std::move(message));
+        std::cout << "Queue Size: " << _queue.size() << std::endl;
+#if 1
+        while (_queue.size() > 1)
+        {
+            _queue.pop_front();
+        }
+#endif
         _cond.notify_one();
     }
 

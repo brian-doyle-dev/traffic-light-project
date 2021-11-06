@@ -40,8 +40,9 @@ void TrafficLight::waitForGreen()
     // Once it receives TrafficLightPhase::green, the method returns.
     while(true)
     {
-        std::cout << "Waiting for Green\n";
+ 
         TrafficLightPhase phase = queue.receive();
+        std::cout << "Receive Message: " << ((phase == green) ? "Green" : "Red") << std::endl;
         if (phase == green)
         {
             return;
@@ -51,6 +52,7 @@ void TrafficLight::waitForGreen()
 
 void TrafficLight::togglePhase()
 {
+        std::unique_lock<std::mutex> lck(_mutex);
     if (_currentPhase == red)
     {
         _currentPhase = green;
@@ -63,6 +65,7 @@ void TrafficLight::togglePhase()
 
 TrafficLightPhase TrafficLight::getCurrentPhase()
 {
+    std::unique_lock<std::mutex> lck(_mutex);
     return _currentPhase;
 }
 
@@ -89,8 +92,10 @@ void TrafficLight::cycleThroughPhases()
         _timer--;
         if (_timer == 0)
         {
-            _timer = rand();
+            _timer = 3000; //rand();
             togglePhase();
+            TrafficLightPhase phase = getCurrentPhase();
+            std::cout << "Send Message: " << ((phase == green) ? "Green" : "Red") << std::endl;
             queue.send(std::move(getCurrentPhase()));
         }
 
