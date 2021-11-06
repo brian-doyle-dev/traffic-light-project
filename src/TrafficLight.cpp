@@ -7,7 +7,39 @@ using namespace std::chrono_literals;
 
 /* Implementation of class "MessageQueue" */
 
-// Implemented in TrafficLight.h". Was in MessageQueue.h
+template <typename T>
+T MessageQueue<T>::receive()
+{
+    // FP.5a : The method receive should use std::unique_lock<std::mutex> and _condition.wait() 
+    // to wait for and receive new messages and pull them from the queue using move semantics. 
+    // The received object should then be returned by the receive function. 
+    std::unique_lock<std::mutex> lock(_mut);
+    _cond.wait(lock, [this] { return !_queue.empty(); });
+    T msg = std::move(_queue.front());
+
+    _queue.pop_front();
+    return msg;
+}
+
+
+template <typename T>
+void MessageQueue<T>::send(T &&msg)
+{
+    // FP.4a : The method send should use the mechanisms std::lock_guard<std::mutex> 
+    // as well as _condition.notify_one() to add a new message to the queue and afterwards send a notification.
+    std::lock_guard<std::mutex> lock(_mut);
+
+    _queue.push_back(std::move(msg));
+
+    // Remove old message from the queue to prevent the queue continually 
+    // growing for intersections that don't get many visits by vehicles.
+    while (_queue.size() > 1)
+    {
+         _queue.pop_front();
+    }
+
+    _cond.notify_one();
+}
 
 /* Implementation of class "TrafficLight" */
 
@@ -25,7 +57,7 @@ void TrafficLight::waitForGreen()
     // Once it receives TrafficLightPhase::green, the method returns.
     while(true)
     {
-        std::cout << "Waiting for Green\n";
+ 
         TrafficLightPhase phase = queue.receive();
         if (phase == green)
         {
@@ -36,6 +68,7 @@ void TrafficLight::waitForGreen()
 
 void TrafficLight::togglePhase()
 {
+    std::unique_lock<std::mutex> lck(_mutex);
     if (_currentPhase == red)
     {
         _currentPhase = green;
@@ -48,6 +81,7 @@ void TrafficLight::togglePhase()
 
 TrafficLightPhase TrafficLight::getCurrentPhase()
 {
+    std::unique_lock<std::mutex> lck(_mutex);
     return _currentPhase;
 }
 
@@ -59,6 +93,7 @@ void TrafficLight::simulate()
 
 int TrafficLight::rand()
 {
+    // Generate random number between 4000 and 6000
     return 4000 + (std::rand() + 1) / ((static_cast<long>(RAND_MAX) + 1)/ 2000);
 }
         
@@ -71,16 +106,18 @@ void TrafficLight::cycleThroughPhases()
     // Also, the while-loop should use std::this_thread::sleep_for to wait 1ms between two cycles. 
     while(true)
     {    
+        // Each count of the timer is 1ms. When it reaches zero the 
+        // phase of the lights is changed and the new phase placed in the queue.
         _timer--;
         if (_timer == 0)
         {
             _timer = rand();
             togglePhase();
+            TrafficLightPhase phase = getCurrentPhase();
             queue.send(std::move(getCurrentPhase()));
         }
 
         std::this_thread::sleep_for(1ms);
-
     }
 }
 
