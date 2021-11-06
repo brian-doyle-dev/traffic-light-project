@@ -68,7 +68,7 @@ void TrafficLight::waitForGreen()
 
 void TrafficLight::togglePhase()
 {
-        std::unique_lock<std::mutex> lck(_mutex);
+    std::unique_lock<std::mutex> lck(_mutex);
     if (_currentPhase == red)
     {
         _currentPhase = green;
