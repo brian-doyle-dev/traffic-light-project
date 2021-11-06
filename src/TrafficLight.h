@@ -4,7 +4,6 @@
 #include <mutex>
 #include <deque>
 #include <condition_variable>
-//#include "MessageQueue.h"
 #include "TrafficObject.h"
 
 // forward declarations to avoid include cycle
@@ -38,11 +37,9 @@ enum TrafficLightPhase {red, green};
 class TrafficLight : public TrafficObject
 {
 public:
-
     // constructor / desctructor
     TrafficLight();
     ~TrafficLight() {};
-
 
     // getters / setters
     TrafficLightPhase getCurrentPhase();
@@ -52,7 +49,6 @@ public:
     void togglePhase();
     void waitForGreen();
     void simulate();
-
 
 private:
     // typical behaviour methods

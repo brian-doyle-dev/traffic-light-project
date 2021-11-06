@@ -108,14 +108,13 @@ void TrafficLight::cycleThroughPhases()
         _timer--;
         if (_timer == 0)
         {
-            _timer = 3000; //rand();
+            _timer = rand();
             togglePhase();
             TrafficLightPhase phase = getCurrentPhase();
             queue.send(std::move(getCurrentPhase()));
         }
 
         std::this_thread::sleep_for(1ms);
-
     }
 }
 
