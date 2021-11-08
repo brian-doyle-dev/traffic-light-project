@@ -29,6 +29,8 @@ void MessageQueue<T>::send(T &&msg)
     // as well as _condition.notify_one() to add a new message to the queue and afterwards send a notification.
     std::lock_guard<std::mutex> lock(_mut);
 
+    // The review suggested using _queue.clear() here. The loop following the _queue.push_back() achieves the same thing, though _queue.clear() is probably neater.
+
     _queue.push_back(std::move(msg));
 
     // Remove old message from the queue to prevent the queue continually 
@@ -104,6 +106,8 @@ void TrafficLight::cycleThroughPhases()
     // and toggles the current phase of the traffic light between red and green and sends an update method 
     // to the message queue using move semantics. The cycle duration should be a random value between 4 and 6 seconds. 
     // Also, the while-loop should use std::this_thread::sleep_for to wait 1ms between two cycles. 
+    _timer = rand(); // This can never return 0, as suggested in the review. It returns a minimum value of 4000
+
     while(true)
     {    
         // Each count of the timer is 1ms. When it reaches zero the 
@@ -111,7 +115,6 @@ void TrafficLight::cycleThroughPhases()
         _timer--;
         if (_timer == 0)
         {
-            _timer = rand();
             togglePhase();
             TrafficLightPhase phase = getCurrentPhase();
             queue.send(std::move(getCurrentPhase()));
