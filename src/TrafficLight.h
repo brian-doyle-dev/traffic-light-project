@@ -62,7 +62,9 @@ private:
     MessageQueue<TrafficLightPhase> queue;
     std::condition_variable _condition;
     std::mutex _mutex;
-    int _timer;
+    const int _initTimer = rand(); // This can never return 0, as suggested in the review. It returns a minimum value of 4000
+    int _timer = _initTimer;
+
 };
 
 #endif
